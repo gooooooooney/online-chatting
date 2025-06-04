@@ -13,6 +13,7 @@ model User {
   conversations   Conversation[] @relation(fields: [conversationIds], references: [id])
 
   messages Message[] @relation("UserMessages")
+  Message  Message[]
 
   @@unique([email])
   @@map("user")

@@ -7,9 +7,13 @@ import { DesktopItem } from "./destop-item";
 
 interface DesktopSidebarProps {
 	currentUser?: User;
+	users?: any[];
 }
 
-export const DesktopSidebar = ({ currentUser }: DesktopSidebarProps) => {
+export const DesktopSidebar = ({
+	currentUser,
+	users = [],
+}: DesktopSidebarProps) => {
 	const routes = useRoutes();
 
 	const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +21,6 @@ export const DesktopSidebar = ({ currentUser }: DesktopSidebarProps) => {
 	const handleClose = () => {
 		setIsOpen(false);
 	};
-	console.log({ currentUser }, "currentUser");
 
 	return (
 		<div className="hidden justify-between lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-20 lg:flex-col lg:overflow-y-auto lg:border-r-[1px] lg:bg-white lg:pb-4 xl:px-6 ">
