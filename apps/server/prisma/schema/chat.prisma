@@ -1,0 +1,32 @@
+model Conversation {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt     DateTime  @default(now())
+  lastMessageAt DateTime? @default(now())
+  name          String?
+  isGroup       Boolean   @default(false)
+
+  messagesIds String[]  @db.ObjectId
+  messages    Message[]
+
+  userIds String[]
+  users   User[]   @relation(fields: [userIds], references: [id])
+
+  @@map("conversation")
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  body      String?
+  image     String?
+  createdAt DateTime @default(now())
+
+  seenByIds String[] @db.ObjectId
+
+  conversationId String       @db.ObjectId
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId String @db.ObjectId
+  sender   User   @relation("UserMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("message")
+}
