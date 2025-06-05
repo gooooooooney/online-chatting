@@ -97,46 +97,39 @@ export const conversationRouter = {
 				messages: {
 					include: {
 						sender: true,
+						seen: true,
 					},
 				},
 			},
 		});
 
-		// 为每个conversation的每个message添加seen字段
-		const conversationsWithSeen = await Promise.all(
-			conversations.map(async (conversation) => {
-				const messagesWithSeen = await Promise.all(
-					conversation.messages.map(async (message) => {
-						// 根据seenByIds获取已读用户信息
-						const seenUsers = await prisma.user.findMany({
-							where: {
-								id: {
-									in: message.seenByIds || [],
-								},
-							},
-							select: {
-								id: true,
-								name: true,
-								email: true,
-								image: true,
-							},
-						});
-
-						return {
-							...message,
-							seen: seenUsers,
-						};
-					}),
-				);
-
-				return {
-					...conversation,
-					messages: messagesWithSeen,
-				};
-			}),
-		);
-
-		return conversationsWithSeen as FullConversation[];
-		// return conversations;
+		return conversations;
 	}),
+	getConversationById: protectedProcedure
+		.input(
+			z.object({
+				conversationId: z.string(),
+			}),
+		)
+		.handler(async ({ context, input }) => {
+			const { conversationId } = input;
+
+			const conversation: FullConversation | null =
+				await prisma.conversation.findUnique({
+					where: {
+						id: conversationId,
+					},
+					include: {
+						users: true,
+						messages: {
+							include: {
+								sender: true,
+								seen: true,
+							},
+						},
+					},
+				});
+
+			return conversation;
+		}),
 };

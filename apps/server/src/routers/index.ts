@@ -1,5 +1,6 @@
 import { protectedProcedure, publicProcedure } from "../lib/orpc";
 import { conversationRouter } from "./conversation";
+import { messagesRouter } from "./messages";
 import { todoRouter } from "./todo";
 import { userRouter } from "./user";
 
@@ -16,5 +17,6 @@ export const appRouter = {
 	todo: todoRouter,
 	user: userRouter,
 	conversation: conversationRouter,
+	messages: messagesRouter,
 };
 export type AppRouter = typeof appRouter;

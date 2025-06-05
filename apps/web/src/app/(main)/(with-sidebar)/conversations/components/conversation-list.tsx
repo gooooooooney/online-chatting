@@ -21,7 +21,7 @@ export const ConversationList = ({ initialItems }: ConversationListProps) => {
 	return (
 		<aside
 			className={cn(
-				"fixed inset-y-0 overflow-y-auto border-gray-200 border-r pb-20 lg:left-20 lg:block lg:w-80 lg:border-0 lg:pb-0",
+				"fixed inset-y-0 overflow-y-auto border-gray-200 border-r pb-20 lg:left-20 lg:block lg:w-80 lg:pb-0",
 				isOpen ? "hidden" : "left-0 block w-full",
 			)}
 		>

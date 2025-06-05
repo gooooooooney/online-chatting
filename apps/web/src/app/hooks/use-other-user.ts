@@ -1,5 +1,5 @@
 import { authClient } from "@/lib/auth-client";
-import type { FullConversation } from "@/types";
+import type { Conversation, FullConversation } from "@/types";
 import { useMemo } from "react";
 
 export const useOtherUser = (conversation: FullConversation) => {
