@@ -4,6 +4,11 @@ import { customSession } from "better-auth/plugins";
 import prisma from "../../prisma";
 
 export const auth = betterAuth({
+	advanced: {
+		database: {
+			generateId: false,
+		},
+	},
 	database: prismaAdapter(prisma, {
 		provider: "mongodb",
 	}),

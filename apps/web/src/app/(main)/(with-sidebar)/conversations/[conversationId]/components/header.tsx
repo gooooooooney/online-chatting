@@ -2,6 +2,7 @@
 
 import { useOtherUser } from "@/app/hooks/use-other-user";
 import { Avatar } from "@/components/avatar";
+import { ModeToggle } from "@/components/mode-toggle";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -30,7 +31,7 @@ export const Header = ({ conversation }: HeaderProps) => {
 	}, [conversation]);
 
 	return (
-		<div className="flex w-full items-center justify-between border-b-[1px] bg-white px-4 py-3 shadow-sm sm:px-4 lg:px-6">
+		<div className="flex w-full items-center justify-between border-b-[1px]  px-4 py-3 shadow-sm sm:px-4 lg:px-6">
 			<div className="flex items-center gap-3">
 				<Link
 					className="block cursor-pointer text-sky-500 transition hover:text-sky-600 lg:hidden"
@@ -46,19 +47,22 @@ export const Header = ({ conversation }: HeaderProps) => {
 					</div>
 				</div>
 			</div>
-			<DropdownMenu>
-				<DropdownMenuTrigger>
-					<EllipsisIcon className="size-5 cursor-pointer text-sky-500 transition hover:text-sky-600" />
-				</DropdownMenuTrigger>
-				<DropdownMenuContent>
-					<DropdownMenuLabel>My Account</DropdownMenuLabel>
-					{/* <DropdownMenuSeparator />
+			<div className="flex items-center gap-2">
+				<ModeToggle />
+				<DropdownMenu>
+					<DropdownMenuTrigger>
+						<EllipsisIcon className="size-5 cursor-pointer text-sky-500 transition hover:text-sky-600" />
+					</DropdownMenuTrigger>
+					<DropdownMenuContent>
+						<DropdownMenuLabel>My Account</DropdownMenuLabel>
+						{/* <DropdownMenuSeparator />
           <DropdownMenuItem>Profile</DropdownMenuItem>
           <DropdownMenuItem>Billing</DropdownMenuItem>
           <DropdownMenuItem>Team</DropdownMenuItem>
           <DropdownMenuItem>Subscription</DropdownMenuItem> */}
-				</DropdownMenuContent>
-			</DropdownMenu>
+					</DropdownMenuContent>
+				</DropdownMenu>
+			</div>
 		</div>
 	);
 };

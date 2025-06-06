@@ -2,24 +2,13 @@
 
 import { useConversation } from "@/app/hooks/use-conversation";
 import { Button } from "@/components/ui/button";
-import {
-	FormControl,
-	FormField,
-	FormItem,
-	Form as FormUI,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { client } from "@/utils/client";
 import { useForm } from "@tanstack/react-form";
 import { ImageIcon, SendIcon } from "lucide-react";
-// import { useForm } from "react-hook-form";
-// import { zodResolver } from "@hookform/resolvers/zod"
+import { CldUploadButton } from "next-cloudinary";
 import { z } from "zod";
-
-const formSchema = z.object({
-	message: z.string().min(1, { message: "Message is required" }),
-});
 
 export const Form = () => {
 	const { conversationId } = useConversation();
@@ -28,7 +17,7 @@ export const Form = () => {
 			message: "",
 		},
 		onSubmit: (data) => {
-			client.messages.createMessage({
+			client.messages.message({
 				conversationId,
 				message: data.value.message,
 			});
@@ -40,9 +29,28 @@ export const Form = () => {
 		},
 	});
 
+	const handleUpload = (url: string) => {
+		client.messages.message({
+			conversationId,
+			image: url,
+		});
+	};
+
 	return (
-		<div className="flex w-full items-center gap-2 border-t bg-white px-4 py-4 lg:gap-4">
-			<ImageIcon className="size-8 text-sky-500" />
+		<div className="flex w-full items-center gap-2 border-t  px-4 py-4 lg:gap-4">
+			<CldUploadButton
+				options={{
+					maxFiles: 1,
+				}}
+				onSuccess={({ info }) => {
+					if (info && typeof info !== "string") {
+						handleUpload(info.secure_url);
+					}
+				}}
+				uploadPreset="chatting-room"
+			>
+				<ImageIcon className="size-6 cursor-pointer text-sky-500 hover:text-sky-600" />
+			</CldUploadButton>
 			<form
 				onSubmit={(e) => {
 					e.preventDefault();
@@ -53,9 +61,9 @@ export const Form = () => {
 			>
 				<form.Field name="message">
 					{(field) => (
-						<div className="relative flex-1 rounded-full bg-white p-4">
+						<div className="relative flex-1 rounded-full  p-4">
 							<Input
-								className="w-full resize-none rounded-full bg-neutral-100 p-4 text-block focus:outline-none"
+								className="w-full resize-none rounded-full dark:bg-neutral-900 bg-neutral-100 p-4 text-block focus:outline-none"
 								placeholder="Write a message"
 								id={field.name}
 								name={field.name}

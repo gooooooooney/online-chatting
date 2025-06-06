@@ -27,12 +27,12 @@ export const messagesRouter = {
 
 			return messages;
 		}),
-	createMessage: protectedProcedure
+	message: protectedProcedure
 		.input(
 			z.object({
 				conversationId: z.string(),
 				image: z.string().optional(),
-				message: z.string(),
+				message: z.string().optional(),
 			}),
 		)
 		.handler(async ({ context, input }) => {

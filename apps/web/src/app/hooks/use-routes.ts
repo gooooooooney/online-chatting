@@ -1,5 +1,8 @@
+"use client";
+
 import { authClient } from "@/lib/auth-client";
-import { usePathname } from "next/navigation";
+import { PathRoute } from "@/lib/constants/route";
+import { usePathname, useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { HiChat } from "react-icons/hi";
 import { HiArrowLeftOnRectangle, HiUsers } from "react-icons/hi2";
@@ -7,6 +10,7 @@ import { useConversation } from "./use-conversation";
 
 export const useRoutes = () => {
 	const pathname = usePathname();
+	const router = useRouter();
 
 	const { conversationId } = useConversation();
 
@@ -29,7 +33,13 @@ export const useRoutes = () => {
 				href: "#",
 				icon: HiArrowLeftOnRectangle,
 				onClick: () => {
-					authClient.signOut();
+					authClient.signOut({
+						fetchOptions: {
+							onSuccess: () => {
+								router.push(PathRoute.AUTH_SIGN_IN);
+							},
+						},
+					});
 				},
 			},
 		],

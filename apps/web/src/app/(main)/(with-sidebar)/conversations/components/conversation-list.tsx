@@ -21,20 +21,22 @@ export const ConversationList = ({ initialItems }: ConversationListProps) => {
 	return (
 		<aside
 			className={cn(
-				"fixed inset-y-0 overflow-y-auto border-gray-200 border-r pb-20 lg:left-20 lg:block lg:w-80 lg:pb-0",
+				"fixed inset-y-0 overflow-y-auto dark:bg-gray-900 bg-gray-100 dark:border-gray-800 border-gray-200 border-r pb-20 lg:left-20 lg:block lg:w-80 lg:pb-0",
 				isOpen ? "hidden" : "left-0 block w-full",
 			)}
 		>
 			<div className="px-5">
 				<div className="mb-4 flex justify-between pt-4">
-					<div className="font-bold text-2xl text-neutral-800">Messages</div>
-					<div className="cursor-pointer rounded-full bg-gray-100 p-2 transition hover:opacity-75">
+					<div className="font-bold text-2xl text-primary/80">Messages</div>
+					<div className="cursor-pointer rounded-full bg-gray-200 dark:bg-gray-800 p-2 transition hover:opacity-75">
 						<UserPlus2Icon size={20} />
 					</div>
 				</div>
 				{items.length === 0 ? (
 					<div className="flex h-full flex-col items-center justify-center">
-						<p className="text-gray-500">No conversations found</p>
+						<p className="text-gray-500 dark:text-gray-400">
+							No conversations found
+						</p>
 					</div>
 				) : (
 					items.map((item) => (

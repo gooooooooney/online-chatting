@@ -1,6 +1,7 @@
 "use client";
 
 import { Avatar } from "@/components/avatar";
+import { PathRoute } from "@/lib/constants/route";
 import type { User } from "@/types";
 import { useORPC } from "@/utils/orpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -20,7 +21,7 @@ export const UserBox = ({ data }: UserBoxProps) => {
 	} = useMutation(
 		orpc.conversation.getConversations.mutationOptions({
 			onSuccess(data) {
-				router.push(`/conversations/${data?.id}`);
+				router.push(PathRoute.getConversationPath(data.id));
 			},
 		}),
 	);
@@ -32,7 +33,7 @@ export const UserBox = ({ data }: UserBoxProps) => {
 	return (
 		<div
 			onClick={handleClick}
-			className="relative flex w-full cursor-pointer items-center gap-3 rounded-lg bg-white p-3 transition hover:bg-neutral-100 "
+			className="relative flex w-full cursor-pointer items-center gap-3 rounded-lg bg-accent p-3 transition hover:bg-neutral-100 "
 		>
 			<Avatar user={data} />
 			<div className="min-w-0 flex-1">

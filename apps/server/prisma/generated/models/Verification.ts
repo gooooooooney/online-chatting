@@ -237,7 +237,7 @@ export type VerificationScalarWhereWithAggregatesInput = {
 }
 
 export type VerificationCreateInput = {
-  id: string
+  id?: string
   identifier: string
   value: string
   expiresAt: Date | string
@@ -246,7 +246,7 @@ export type VerificationCreateInput = {
 }
 
 export type VerificationUncheckedCreateInput = {
-  id: string
+  id?: string
   identifier: string
   value: string
   expiresAt: Date | string
@@ -271,7 +271,7 @@ export type VerificationUncheckedUpdateInput = {
 }
 
 export type VerificationCreateManyInput = {
-  id: string
+  id?: string
   identifier: string
   value: string
   expiresAt: Date | string

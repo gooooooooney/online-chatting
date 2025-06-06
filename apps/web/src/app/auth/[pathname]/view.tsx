@@ -13,6 +13,7 @@ export function AuthView({ pathname }: { pathname: string }) {
 				// className={cn({
 				//   "md:min-w-md": !pathname.endsWith("settings")
 				// })}
+				redirectTo="/users"
 				pathname={pathname}
 			/>
 		</main>

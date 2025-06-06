@@ -1,6 +1,7 @@
 import type { Context } from "../../server/src/lib/context";
 export type {
 	FullConversation,
+	FullMessageType,
 	Conversation,
 	Message,
 } from "../../server/types";

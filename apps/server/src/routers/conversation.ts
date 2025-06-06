@@ -103,6 +103,8 @@ export const conversationRouter = {
 			},
 		});
 
+		console.log("conversations", conversations);
+
 		return conversations;
 	}),
 	getConversationById: protectedProcedure
@@ -131,5 +133,55 @@ export const conversationRouter = {
 				});
 
 			return conversation;
+		}),
+	seen: protectedProcedure
+		.input(
+			z.object({
+				conversationId: z.string(),
+			}),
+		)
+		.handler(async ({ context, input }) => {
+			const { conversationId } = input;
+			const currentUser = context.session?.user;
+			const conversation = await prisma.conversation.findUnique({
+				where: {
+					id: conversationId,
+				},
+				include: {
+					messages: {
+						include: {
+							seen: true,
+						},
+					},
+					users: true,
+				},
+			});
+			if (!conversation) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Conversation not found",
+				});
+			}
+			const lastMessage =
+				conversation.messages[conversation.messages.length - 1];
+			if (!lastMessage) {
+				return conversation;
+			}
+			const updatedMessage = await prisma.message.update({
+				where: {
+					id: lastMessage.id,
+				},
+				include: {
+					seen: true,
+					sender: true,
+				},
+				data: {
+					seen: {
+						connect: {
+							id: currentUser?.id,
+						},
+					},
+				},
+			});
+			return updatedMessage;
 		}),
 };

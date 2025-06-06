@@ -1,6 +1,7 @@
 import { useOtherUser } from "@/app/hooks/use-other-user";
 import { Avatar } from "@/components/avatar";
 import { authClient } from "@/lib/auth-client";
+import { PathRoute } from "@/lib/constants/route";
 import { cn } from "@/lib/utils";
 import type { FullConversation } from "@/types";
 import { format } from "date-fns";
@@ -20,7 +21,7 @@ export const ConversationBox = ({ data, selected }: ConversationBoxProps) => {
 	const router = useRouter();
 
 	const handleClick = useCallback(() => {
-		router.push(`/conversations/${data.id}`);
+		router.push(PathRoute.getConversationPath(data.id));
 	}, [data.id, router]);
 
 	const lastMessage = useMemo(() => {
@@ -59,8 +60,9 @@ export const ConversationBox = ({ data, selected }: ConversationBoxProps) => {
 		<div
 			onClick={handleClick}
 			className={cn(
-				"relative flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 transition hover:bg-neutral-100",
-				selected ? "bg-neutral-100" : "bg-white",
+				"relative flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 transition hover:bg-neutral-100 dark:hover:bg-gray-800",
+				"bg-card",
+				selected && "bg-card/20",
 			)}
 		>
 			<Avatar user={otherUser} />
@@ -68,7 +70,7 @@ export const ConversationBox = ({ data, selected }: ConversationBoxProps) => {
 			<div className="min-w-0 flex-1">
 				<div className="focus:outline-none">
 					<div className="mb-1 flex items-center justify-between">
-						<p className="font-medium text-gray-900 text-sm">
+						<p className="font-medium text-foreground text-sm">
 							{data.name || otherUser?.name}
 						</p>
 						{lastMessage?.createdAt && (

@@ -4,6 +4,7 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:where(.dark, .dark *));
+@custom-variant light (&:where(:not(.dark), :not(.dark) *));
 
 @theme {
 	--font-sans: "Inter", "Geist", ui-sans-serif, system-ui, sans-serif,
