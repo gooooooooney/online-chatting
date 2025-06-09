@@ -52,7 +52,7 @@ export const Header = ({ conversation }: HeaderProps) => {
 				<div className="flex items-center gap-2">
 					<ModeToggle />
 					<ProfileDrawer data={conversation}>
-						<EllipsisIcon className="size-5 cursor-pointer text-sky-500 transition hover:text-sky-600" />
+						<EllipsisIcon className="size-5 cursor-pointer" />
 					</ProfileDrawer>
 				</div>
 			</div>

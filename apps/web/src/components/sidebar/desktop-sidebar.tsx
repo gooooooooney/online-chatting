@@ -4,6 +4,7 @@ import type { User } from "@/types";
 import { useState } from "react";
 import { Avatar } from "../avatar";
 import { DesktopItem } from "./destop-item";
+import { SettingsModal } from "./settings-modal";
 
 interface DesktopSidebarProps {
 	currentUser?: User;
@@ -15,12 +16,6 @@ export const DesktopSidebar = ({
 	users = [],
 }: DesktopSidebarProps) => {
 	const routes = useRoutes();
-
-	const [isOpen, setIsOpen] = useState(false);
-
-	const handleClose = () => {
-		setIsOpen(false);
-	};
 
 	return (
 		<div className="hidden justify-between lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-20 lg:flex-col lg:overflow-y-auto lg:border-r-[1px]  lg:pb-4 xl:px-6">
@@ -39,14 +34,7 @@ export const DesktopSidebar = ({
 				</ul>
 			</nav>
 			<nav className="mt-4 flex flex-col justify-between ">
-				<div
-					onClick={() => {
-						setIsOpen(true);
-					}}
-					className="cursor-pointer transition hover:opacity-75 "
-				>
-					<Avatar user={currentUser} />
-				</div>
+				<SettingsModal user={currentUser} />
 			</nav>
 		</div>
 	);

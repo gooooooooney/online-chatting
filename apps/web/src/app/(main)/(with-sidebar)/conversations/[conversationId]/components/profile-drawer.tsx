@@ -2,6 +2,17 @@
 
 import { useOtherUser } from "@/app/hooks/use-other-user";
 import { Avatar } from "@/components/avatar";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
 	Drawer,
@@ -16,6 +27,7 @@ import type { FullConversation } from "@/types";
 import { format } from "date-fns";
 import { Trash2Icon, XIcon } from "lucide-react";
 import { useMemo } from "react";
+import { ConfirmModal } from "./confirm-modal";
 
 interface ProfileDrawerProps {
 	data: FullConversation;
@@ -63,12 +75,7 @@ export const ProfileDrawer = ({ data, children }: ProfileDrawerProps) => {
 					<div className="font-bold text-lg">{otherUser?.name}</div>
 					<DrawerDescription>{statusText}</DrawerDescription>
 
-					<div>
-						<Button variant="ghost" className="w-full h-full  flex-col">
-							<Trash2Icon className="size-4" />
-							Delete
-						</Button>
-					</div>
+					<ConfirmModal />
 
 					<div className="w-full">
 						<dl className="space-y-8 px-4 sm:space-y-6 sm:px-6">

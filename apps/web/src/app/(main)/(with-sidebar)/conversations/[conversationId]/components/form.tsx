@@ -17,10 +17,14 @@ export const Form = () => {
 			message: "",
 		},
 		onSubmit: (data) => {
-			client.messages.message({
-				conversationId,
-				message: data.value.message,
-			});
+			client.messages
+				.message({
+					conversationId,
+					message: data.value.message,
+				})
+				.then(() => {
+					form.resetField("message");
+				});
 		},
 		validators: {
 			onSubmit: z.object({
@@ -48,8 +52,9 @@ export const Form = () => {
 					}
 				}}
 				uploadPreset="chatting-room"
+				className="cursor-pointer hover:opacity-75 transition-opacity"
 			>
-				<ImageIcon className="size-6 cursor-pointer text-sky-500 hover:text-sky-600" />
+				<ImageIcon className="size-6 text-sky-500 hover:text-sky-600" />
 			</CldUploadButton>
 			<form
 				onSubmit={(e) => {

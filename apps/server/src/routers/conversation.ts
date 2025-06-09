@@ -103,8 +103,6 @@ export const conversationRouter = {
 			},
 		});
 
-		console.log("conversations", conversations);
-
 		return conversations;
 	}),
 	getConversationById: protectedProcedure
@@ -183,5 +181,37 @@ export const conversationRouter = {
 				},
 			});
 			return updatedMessage;
+		}),
+	deleteConversation: protectedProcedure
+		.input(
+			z.object({
+				conversationId: z.string(),
+			}),
+		)
+		.handler(async ({ context, input }) => {
+			const { conversationId } = input;
+			const currentUser = context.session?.user;
+			const existingConversation = await prisma.conversation.findUnique({
+				where: {
+					id: conversationId,
+				},
+				include: {
+					users: true,
+				},
+			});
+			if (!existingConversation) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Conversation not found",
+				});
+			}
+			const deletedConversation = await prisma.conversation.delete({
+				where: {
+					id: conversationId,
+					userIds: {
+						hasSome: [currentUser?.id],
+					},
+				},
+			});
+			return deletedConversation;
 		}),
 };

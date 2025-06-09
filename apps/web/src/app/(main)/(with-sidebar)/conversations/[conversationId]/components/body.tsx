@@ -10,7 +10,6 @@ interface BodyProps {
 	initialMessages: FullMessageType[];
 }
 export const Body = ({ initialMessages = [] }: BodyProps) => {
-	console.log("initialMessages", initialMessages);
 	const [messages, setMessages] = useState(initialMessages);
 	const bottomRef = useRef<HTMLDivElement>(null);
 	const { conversationId } = useConversation();
