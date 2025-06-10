@@ -4,7 +4,7 @@ import { authClient } from "@/lib/auth-client";
 import { PathRoute } from "@/lib/constants/route";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { HiChat } from "react-icons/hi";
+import { HiChat, HiCog } from "react-icons/hi";
 import { HiArrowLeftOnRectangle, HiUsers } from "react-icons/hi2";
 import { useConversation } from "./use-conversation";
 
@@ -27,6 +27,12 @@ export const useRoutes = () => {
 				href: "/users",
 				icon: HiUsers,
 				active: pathname === "/users",
+			},
+			{
+				label: "Settings",
+				href: "/settings",
+				icon: HiCog,
+				active: pathname === "/settings",
 			},
 			{
 				label: "Logout",

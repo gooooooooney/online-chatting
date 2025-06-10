@@ -27,6 +27,7 @@ function AuthUIProvider({ children }: { children: ReactNode }) {
 				router.refresh();
 			}}
 			redirectTo={PathRoute.USERS}
+			settingsURL={PathRoute.SETTINGS}
 			Link={Link}
 		>
 			{children}

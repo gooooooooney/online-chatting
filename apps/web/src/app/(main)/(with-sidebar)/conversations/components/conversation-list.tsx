@@ -2,17 +2,21 @@
 
 import { useConversation } from "@/app/hooks/use-conversation";
 import { cn } from "@/lib/utils";
-import type { FullConversation } from "@/types";
-import { UserPlus2Icon } from "lucide-react";
+import type { FullConversation, User } from "@/types";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ConversationBox } from "./conversation-box";
+import GroupChatModal from "./group-chat-modal";
 
 interface ConversationListProps {
 	initialItems: FullConversation[];
+	users: User[];
 }
 
-export const ConversationList = ({ initialItems }: ConversationListProps) => {
+export const ConversationList = ({
+	initialItems,
+	users,
+}: ConversationListProps) => {
 	const [items, setItems] = useState<FullConversation[]>(initialItems);
 
 	const router = useRouter();
@@ -28,9 +32,7 @@ export const ConversationList = ({ initialItems }: ConversationListProps) => {
 			<div className="px-5">
 				<div className="mb-4 flex justify-between pt-4">
 					<div className="font-bold text-2xl text-primary/80">Messages</div>
-					<div className="cursor-pointer rounded-full bg-gray-200 dark:bg-gray-800 p-2 transition hover:opacity-75">
-						<UserPlus2Icon size={20} />
-					</div>
+					<GroupChatModal users={users} />
 				</div>
 				{items.length === 0 ? (
 					<div className="flex h-full flex-col items-center justify-center">

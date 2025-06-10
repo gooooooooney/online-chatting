@@ -17,7 +17,7 @@ export const Avatar = ({ user }: AvatarProps) => {
 						className="object-cover"
 					/>
 					<AvatarFallback className="bg-gray-400 text-white text-xl uppercase">
-						{user?.name?.charAt(0)}
+						{user?.name?.substring(0, 2).toUpperCase()}
 					</AvatarFallback>
 				</AvatarUI>
 			</div>

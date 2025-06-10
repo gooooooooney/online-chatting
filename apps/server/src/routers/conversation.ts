@@ -8,7 +8,7 @@ export const conversationRouter = {
 	getConversations: protectedProcedure
 		.input(
 			z.object({
-				userId: z.string(),
+				userId: z.string().optional(),
 				isGroup: z.boolean().optional(),
 				name: z.string().optional(),
 				members: z
@@ -52,12 +52,12 @@ export const conversationRouter = {
 					OR: [
 						{
 							userIds: {
-								equals: [userId, currentUser?.id],
+								equals: [userId!, currentUser?.id],
 							},
 						},
 						{
 							userIds: {
-								equals: [currentUser?.id, userId],
+								equals: [currentUser?.id!, userId!],
 							},
 						},
 					],

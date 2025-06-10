@@ -1,10 +1,8 @@
 "use client";
 import { useRoutes } from "@/app/hooks/use-routes";
 import type { User } from "@/types";
-import { useState } from "react";
-import { Avatar } from "../avatar";
+import { UserButton } from "@daveyplate/better-auth-ui";
 import { DesktopItem } from "./destop-item";
-import { SettingsModal } from "./settings-modal";
 
 interface DesktopSidebarProps {
 	currentUser?: User;
@@ -33,8 +31,17 @@ export const DesktopSidebar = ({
 					))}
 				</ul>
 			</nav>
-			<nav className="mt-4 flex flex-col justify-between ">
-				<SettingsModal user={currentUser} />
+			<nav className="mt-4 flex flex-col items-center justify-between ">
+				<UserButton
+					classNames={{
+						trigger: {
+							base: "cursor-pointer transition hover:opacity-75  size-12 flex items-center justify-center",
+							avatar: {
+								base: "size-10",
+							},
+						},
+					}}
+				/>
 			</nav>
 		</div>
 	);
