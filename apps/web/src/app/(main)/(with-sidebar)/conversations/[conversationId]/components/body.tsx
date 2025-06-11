@@ -1,9 +1,11 @@
 "use client";
 
 import { useConversation } from "@/app/hooks/use-conversation";
+import { pusherClient } from "@/lib/pusher";
 import type { FullMessageType } from "@/types";
 import { client } from "@/utils/client";
-import { useEffect, useRef, useState } from "react";
+import { find } from "lodash";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MessageBox } from "./message-box";
 
 interface BodyProps {
@@ -14,13 +16,30 @@ export const Body = ({ initialMessages = [] }: BodyProps) => {
 	const bottomRef = useRef<HTMLDivElement>(null);
 	const { conversationId } = useConversation();
 
+	const messagesHandler = useCallback((message: FullMessageType) => {
+		setMessages((current) => {
+			if (find(current, { id: message.id })) {
+				return current;
+			}
+			return [...current, message];
+		});
+	}, []);
+
 	useEffect(() => {
 		setMessages(initialMessages);
 	}, [initialMessages]);
 
 	useEffect(() => {
+		pusherClient.subscribe(conversationId);
 		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-	}, [messages]);
+
+		pusherClient.bind("messages:new", messagesHandler);
+
+		return () => {
+			pusherClient.unsubscribe(conversationId);
+			pusherClient.unbind("messages:new", messagesHandler);
+		};
+	}, [conversationId]);
 
 	useEffect(() => {
 		if (conversationId) {

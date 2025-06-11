@@ -3,18 +3,11 @@
 import { useOtherUser } from "@/app/hooks/use-other-user";
 import { Avatar } from "@/components/avatar";
 import { ModeToggle } from "@/components/mode-toggle";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import type { FullConversation } from "@/types";
 import { ChevronLeft, EllipsisIcon } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
+import { AvatarGroup } from "../../components/avatar-group";
 import { ProfileDrawer } from "./profile-drawer";
 
 interface HeaderProps {
@@ -41,7 +34,11 @@ export const Header = ({ conversation }: HeaderProps) => {
 					>
 						<ChevronLeft size={32} />
 					</Link>
-					<Avatar user={otherUser} />
+					{conversation.isGroup ? (
+						<AvatarGroup users={conversation.users} />
+					) : (
+						<Avatar user={otherUser} />
+					)}
 					<div className="flex flex-col">
 						<div>{conversation.name || otherUser?.name}</div>
 						<div className="font-light text-neutral-500 text-sm">

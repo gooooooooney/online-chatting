@@ -12,6 +12,8 @@ import { Toaster } from "./ui/sonner";
 
 import { authClient } from "@/lib/auth-client";
 import { PathRoute } from "@/lib/constants/route";
+import { PhotoProvider } from "react-photo-view";
+import "react-photo-view/dist/react-photo-view.css";
 
 function AuthUIProvider({ children }: { children: ReactNode }) {
 	const router = useRouter();
@@ -43,10 +45,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 			disableTransitionOnChange
 		>
 			<AuthUIProvider>
-				<QueryClientProvider client={queryClient}>
-					<ORPCContext.Provider value={orpc}>{children}</ORPCContext.Provider>
-					<ReactQueryDevtools />
-				</QueryClientProvider>
+				<PhotoProvider>
+					<QueryClientProvider client={queryClient}>
+						<ORPCContext.Provider value={orpc}>{children}</ORPCContext.Provider>
+						<ReactQueryDevtools />
+					</QueryClientProvider>
+				</PhotoProvider>
 				<Toaster richColors />
 			</AuthUIProvider>
 		</ThemeProvider>

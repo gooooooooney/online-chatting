@@ -5,7 +5,7 @@ import prisma from "../../prisma";
 import { protectedProcedure } from "../lib/orpc";
 
 export const conversationRouter = {
-	getConversations: protectedProcedure
+	createConversation: protectedProcedure
 		.input(
 			z.object({
 				userId: z.string().optional(),
@@ -15,6 +15,7 @@ export const conversationRouter = {
 					.array(
 						z.object({
 							value: z.string(),
+							label: z.string().optional(),
 						}),
 					)
 					.optional(),

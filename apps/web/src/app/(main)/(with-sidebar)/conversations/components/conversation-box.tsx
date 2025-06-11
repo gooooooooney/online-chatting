@@ -7,6 +7,7 @@ import type { FullConversation } from "@/types";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
+import { AvatarGroup } from "./avatar-group";
 
 interface ConversationBoxProps {
 	data: FullConversation;
@@ -61,11 +62,14 @@ export const ConversationBox = ({ data, selected }: ConversationBoxProps) => {
 			onClick={handleClick}
 			className={cn(
 				"relative flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 transition hover:bg-neutral-100 dark:hover:bg-gray-800",
-				"bg-card",
-				selected && "bg-card/20",
+				selected && "bg-neutral-100 dark:bg-gray-800",
 			)}
 		>
-			<Avatar user={otherUser} />
+			{data.isGroup ? (
+				<AvatarGroup users={data.users} />
+			) : (
+				<Avatar user={otherUser} />
+			)}
 
 			<div className="min-w-0 flex-1">
 				<div className="focus:outline-none">

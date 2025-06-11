@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils";
 import type { FullMessageType, User } from "@/types";
 import { format } from "date-fns";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useMemo } from "react";
+import { PhotoView } from "react-photo-view";
 
 interface MessageBoxProps {
 	data: FullMessageType;
@@ -18,12 +19,16 @@ export const MessageBox = ({ data, isLast, isSameSender }: MessageBoxProps) => {
 	const session = authClient.useSession();
 	const currentUser = session.data?.user;
 
-	const isOwn = currentUser?.email === data.sender.email;
+	const isOwn = useMemo(() => {
+		return currentUser?.email === data.sender.email;
+	}, [currentUser, data.sender.email]);
 
-	const seenList = (data.seen || [])
-		.filter((user) => user.email !== data.sender.email)
-		.map((user) => user.name)
-		.join(", ");
+	const seenList = useMemo(() => {
+		return (data.seen || [])
+			.filter((user) => user.email !== data.sender.email)
+			.map((user) => user.name)
+			.join(", ");
+	}, [data.seen, data.sender.email]);
 
 	return (
 		<div
@@ -51,13 +56,15 @@ export const MessageBox = ({ data, isLast, isSameSender }: MessageBoxProps) => {
 					)}
 				>
 					{data.image ? (
-						<Image
-							src={data.image}
-							alt="Image"
-							width={288}
-							height={288}
-							className="object-cover cursor-pointer"
-						/>
+						<PhotoView src={data.image}>
+							<Image
+								src={data.image}
+								alt="Image"
+								width={288}
+								height={288}
+								className="object-cover cursor-pointer"
+							/>
+						</PhotoView>
 					) : (
 						<div className="break-words whitespace-pre-wrap max-w-xs md:max-w-2xl lg:max-w-3xl xl:max-w-4xl">
 							{data.body}

@@ -17,14 +17,15 @@
 		"schema": "./schema"
 	},
 	"dependencies": {
-		"dotenv": "^16.4.7",
-		"zod": "^3.25.16",
-		"@orpc/server": "^1.2.0",
+		"@better-auth/expo": "^1.2.7",
 		"@orpc/client": "^1.2.0",
-		"hono": "^4.7.6",
+		"@orpc/server": "^1.2.0",
 		"@prisma/client": "^6.7.0",
 		"better-auth": "^1.2.7",
-		"@better-auth/expo": "^1.2.7"
+		"dotenv": "^16.4.7",
+		"hono": "^4.7.6",
+		"pusher": "^5.2.0",
+		"zod": "^3.25.16"
 	},
 	"devDependencies": {
 		"tsc-alias": "^1.8.11",

@@ -1,6 +1,7 @@
 import z from "zod";
 import prisma from "../../prisma";
 import { protectedProcedure } from "../lib/orpc";
+import pusher from "../lib/pusher";
 
 export const messagesRouter = {
 	getMessages: protectedProcedure
@@ -85,6 +86,19 @@ export const messagesRouter = {
 							},
 						},
 					},
+				});
+				await pusher.trigger(conversationId, "messages:new", newMessage);
+
+				const lastMessage =
+					updatedConversation.messages[updatedConversation.messages.length - 1];
+
+				updatedConversation.users.forEach((user) => {
+					if (user.email) {
+						pusher.trigger(user.email, "conversation:update", {
+							id: conversationId,
+							lastMessage,
+						});
+					}
 				});
 				return newMessage;
 			} catch (error) {

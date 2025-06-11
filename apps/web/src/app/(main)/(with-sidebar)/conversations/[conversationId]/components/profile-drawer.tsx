@@ -2,17 +2,6 @@
 
 import { useOtherUser } from "@/app/hooks/use-other-user";
 import { Avatar } from "@/components/avatar";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
 	Drawer,
@@ -20,13 +9,13 @@ import {
 	DrawerContent,
 	DrawerDescription,
 	DrawerHeader,
-	DrawerTitle,
 	DrawerTrigger,
 } from "@/components/ui/drawer";
 import type { FullConversation } from "@/types";
 import { format } from "date-fns";
-import { Trash2Icon, XIcon } from "lucide-react";
+import { XIcon } from "lucide-react";
 import { useMemo } from "react";
+import { AvatarGroup } from "../../components/avatar-group";
 import { ConfirmModal } from "./confirm-modal";
 
 interface ProfileDrawerProps {
@@ -71,7 +60,11 @@ export const ProfileDrawer = ({ data, children }: ProfileDrawerProps) => {
 					</DrawerClose>
 				</DrawerHeader>
 				<div className="flex flex-col items-center gap-2">
-					<Avatar user={otherUser} />
+					{data.isGroup ? (
+						<AvatarGroup users={data.users} />
+					) : (
+						<Avatar user={otherUser} />
+					)}
 					<div className="font-bold text-lg">{otherUser?.name}</div>
 					<DrawerDescription>{statusText}</DrawerDescription>
 
@@ -79,6 +72,16 @@ export const ProfileDrawer = ({ data, children }: ProfileDrawerProps) => {
 
 					<div className="w-full">
 						<dl className="space-y-8 px-4 sm:space-y-6 sm:px-6">
+							{data.isGroup && (
+								<div>
+									<dt className="text-sm font-medium text-gray-500 dark:text-gray-400 sm:w-40 sm:flex-shrink-0">
+										Email
+									</dt>
+									<dd className="mt-1 text-sm text-gray-900 dark:text-gray-300 sm:col-span-2">
+										{data.users.map((user) => user.email).join(", ")}
+									</dd>
+								</div>
+							)}
 							{!data.isGroup && (
 								<div>
 									<dt className="text-sm font-medium text-gray-500 dark:text-gray-400 sm:w-40 sm:flex-shrink-0">

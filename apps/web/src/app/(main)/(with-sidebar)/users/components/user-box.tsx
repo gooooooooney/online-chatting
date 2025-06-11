@@ -17,9 +17,9 @@ export const UserBox = ({ data }: UserBoxProps) => {
 	const {
 		data: conversations,
 		isPending,
-		mutate: getConversations,
+		mutate: createConversation,
 	} = useMutation(
-		orpc.conversation.getConversations.mutationOptions({
+		orpc.conversation.createConversation.mutationOptions({
 			onSuccess(data) {
 				router.push(PathRoute.getConversationPath(data.id));
 			},
@@ -27,19 +27,19 @@ export const UserBox = ({ data }: UserBoxProps) => {
 	);
 
 	const handleClick = () => {
-		getConversations({ userId: data.id });
+		createConversation({ userId: data.id });
 	};
 
 	return (
 		<div
 			onClick={handleClick}
-			className="relative flex w-full cursor-pointer items-center gap-3 rounded-lg bg-accent p-3 transition hover:bg-neutral-100 "
+			className="relative flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 transition hover:bg-neutral-100 dark:hover:bg-gray-800"
 		>
 			<Avatar user={data} />
 			<div className="min-w-0 flex-1">
 				<div className="focus:outline-none">
 					<div className="mb-1 flex items-center justify-between">
-						<p className="font-medium text-gray-900 text-sm">{data.name}</p>
+						<p className="font-medium text-foreground text-sm">{data.name}</p>
 					</div>
 					{/* <span className="block text-sm font-light text-neutral-500">
             {conversations?.users.find((user) => user.id !== data.id)?.name}

@@ -14,9 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { User } from "@/types";
 import { client } from "@/utils/client";
+import { isDefinedError, safe } from "@orpc/client";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import { LuUserPlus } from "react-icons/lu";
+import { toast } from "sonner";
 import { z } from "zod";
 
 interface GroupChatModalProps {
@@ -33,18 +35,29 @@ export default function GroupChatModal({ users }: GroupChatModalProps) {
 		},
 		validators: {
 			onSubmit: z.object({
-				name: z.string().min(1),
+				name: z.string().min(1, "Name is required"),
 				members: z
 					.array(z.object({ label: z.string(), value: z.string() }))
-					.min(1),
+					.min(1, "At least one member is required"),
 			}),
 		},
 		onSubmit: async (values) => {
-			await client.conversation.getConversations({
-				...values,
-				isGroup: true,
-			});
-			setIsOpen(false);
+			const { error, data, isSuccess } = await safe(
+				client.conversation.createConversation({
+					...values.value,
+					isGroup: true,
+				}),
+			);
+			if (isSuccess) {
+				toast.success("Conversation created successfully");
+				setIsOpen(false);
+				return;
+			}
+			if (isDefinedError(error)) {
+				console.log(error);
+			} else {
+				toast.error("Failed to create conversation");
+			}
 		},
 	});
 
@@ -74,18 +87,7 @@ export default function GroupChatModal({ users }: GroupChatModalProps) {
 					}}
 					className="space-y-4"
 				>
-					<form.Field
-						validators={{
-							onBlur: ({ value }) => {
-								if (value.length === 0) {
-									return "Name is required";
-								} else {
-									return true;
-								}
-							},
-						}}
-						name="name"
-					>
+					<form.Field name="name">
 						{(field) => (
 							<div className="flex flex-col gap-2">
 								<Label htmlFor={field.name}>Name</Label>
@@ -98,6 +100,11 @@ export default function GroupChatModal({ users }: GroupChatModalProps) {
 									onBlur={field.handleBlur}
 									onChange={(e) => field.handleChange(e.target.value)}
 								/>
+								{field.state.meta.errors.map((error) => (
+									<p key={error?.message} className="text-xs text-red-500">
+										{error?.message}
+									</p>
+								))}
 							</div>
 						)}
 					</form.Field>
@@ -125,6 +132,11 @@ export default function GroupChatModal({ users }: GroupChatModalProps) {
 									animation={2}
 									maxCount={50}
 								/>
+								{field.state.meta.errors.map((error) => (
+									<p key={error?.message} className="text-xs text-red-500">
+										{error?.message}
+									</p>
+								))}
 							</div>
 						)}
 					</form.Field>
@@ -135,7 +147,7 @@ export default function GroupChatModal({ users }: GroupChatModalProps) {
 									<Button variant="outline">Cancel</Button>
 								</DialogClose>
 								<Button type="submit" disabled={!canSubmit || isSubmitting}>
-									Create
+									{isSubmitting ? "Creating..." : "Create"}
 								</Button>
 							</DialogFooter>
 						)}

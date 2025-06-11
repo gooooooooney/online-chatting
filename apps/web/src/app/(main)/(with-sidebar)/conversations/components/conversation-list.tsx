@@ -14,7 +14,7 @@ interface ConversationListProps {
 }
 
 export const ConversationList = ({
-	initialItems,
+	initialItems = [],
 	users,
 }: ConversationListProps) => {
 	const [items, setItems] = useState<FullConversation[]>(initialItems);
