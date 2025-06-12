@@ -8,5 +8,6 @@ export const pusherClient = new PusherClient(
 			endpoint: `/api/pusher/auth`,
 		},
 		cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+		wsHost: process.env.NEXT_PUBLIC_PUSHER_HOST!,
 	},
 );
