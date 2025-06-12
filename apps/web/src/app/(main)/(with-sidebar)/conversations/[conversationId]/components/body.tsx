@@ -1,6 +1,6 @@
 "use client";
 
-import { useConversation } from "@/app/hooks/use-conversation";
+import { useConversation } from "@/hooks/use-conversation";
 import { pusherClient } from "@/lib/pusher";
 import type { FullMessageType } from "@/types";
 import { client } from "@/utils/client";
@@ -16,14 +16,26 @@ export const Body = ({ initialMessages = [] }: BodyProps) => {
 	const bottomRef = useRef<HTMLDivElement>(null);
 	const { conversationId } = useConversation();
 
-	const messagesHandler = useCallback((message: FullMessageType) => {
+	const messagesHandler = (message: FullMessageType) => {
 		setMessages((current) => {
 			if (find(current, { id: message.id })) {
 				return current;
 			}
 			return [...current, message];
 		});
-	}, []);
+	};
+
+	const updateMessageHandler = (newMessage: FullMessageType) => {
+		console.log(newMessage);
+		setMessages((current) => {
+			return current.map((currentMessage) => {
+				if (currentMessage.id === newMessage.id) {
+					return newMessage;
+				}
+				return currentMessage;
+			});
+		});
+	};
 
 	useEffect(() => {
 		setMessages(initialMessages);
@@ -33,11 +45,12 @@ export const Body = ({ initialMessages = [] }: BodyProps) => {
 		pusherClient.subscribe(conversationId);
 		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
-		pusherClient.bind("messages:new", messagesHandler);
-
+		pusherClient.bind("message:new", messagesHandler);
+		pusherClient.bind("message:update", updateMessageHandler);
 		return () => {
 			pusherClient.unsubscribe(conversationId);
-			pusherClient.unbind("messages:new", messagesHandler);
+			pusherClient.unbind("message:new", messagesHandler);
+			pusherClient.unbind("message:update", updateMessageHandler);
 		};
 	}, [conversationId]);
 

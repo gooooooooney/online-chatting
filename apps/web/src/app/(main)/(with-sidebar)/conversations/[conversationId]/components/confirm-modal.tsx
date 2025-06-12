@@ -1,5 +1,4 @@
 "use client";
-import { useConversation } from "@/app/hooks/use-conversation";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -12,6 +11,7 @@ import {
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { useConversation } from "@/hooks/use-conversation";
 import { PathRoute } from "@/lib/constants/route";
 import { useORPC } from "@/utils/orpc";
 import { useControllableState } from "@radix-ui/react-use-controllable-state";

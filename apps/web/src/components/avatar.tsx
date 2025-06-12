@@ -1,4 +1,5 @@
 "use client";
+import { useActiveListStore } from "@/hooks/use-active-list";
 import { cn } from "@/lib/utils";
 import type { User } from "@/types";
 import { AvatarFallback, AvatarImage, Avatar as AvatarUI } from "./ui/avatar";
@@ -12,6 +13,8 @@ interface AvatarProps {
 }
 
 export const Avatar = ({ user, classNames }: AvatarProps) => {
+	const { members } = useActiveListStore();
+	const isActive = members.indexOf(user?.email ?? "") !== -1;
 	return (
 		<div
 			className={cn(
@@ -36,7 +39,9 @@ export const Avatar = ({ user, classNames }: AvatarProps) => {
 					</AvatarFallback>
 				</AvatarUI>
 			</div>
-			<span className="absolute top-0 right-0 block size-2 rounded-full bg-green-500 ring-2 ring-white md:size-2.5 " />
+			{isActive && (
+				<span className="absolute top-0 right-0 block size-2 rounded-full bg-green-500 ring-2 ring-white md:size-2.5 " />
+			)}
 		</div>
 	);
 };

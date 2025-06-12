@@ -3,6 +3,7 @@ import type { FullConversation } from "types";
 import { z } from "zod";
 import prisma from "../../prisma";
 import { protectedProcedure } from "../lib/orpc";
+import pusher from "../lib/pusher";
 
 export const conversationRouter = {
 	createConversation: protectedProcedure
@@ -45,6 +46,11 @@ export const conversationRouter = {
 						users: true,
 					},
 				});
+				newConversation.users.forEach((user) => {
+					if (user.email) {
+						pusher.trigger(user.email, "conversation:new", newConversation);
+					}
+				});
 				return newConversation;
 			}
 
@@ -64,7 +70,6 @@ export const conversationRouter = {
 					],
 				},
 			});
-
 			const singleConversation = existingConversations[0];
 			if (singleConversation) {
 				return singleConversation;
@@ -79,6 +84,11 @@ export const conversationRouter = {
 				include: {
 					users: true,
 				},
+			});
+			newConversation.users.forEach((user) => {
+				if (user.email) {
+					pusher.trigger(user.email, "conversation:new", newConversation);
+				}
 			});
 			return newConversation;
 		}),
@@ -181,6 +191,16 @@ export const conversationRouter = {
 					},
 				},
 			});
+			await pusher.trigger(currentUser?.email!, "conversation:update", {
+				id: conversationId,
+				messages: [updatedMessage],
+			});
+
+			if (lastMessage.senderId.indexOf(currentUser?.id!) !== -1) {
+				return conversation;
+			}
+			await pusher.trigger(conversationId, "message:update", updatedMessage);
+
 			return updatedMessage;
 		}),
 	deleteConversation: protectedProcedure
@@ -212,6 +232,15 @@ export const conversationRouter = {
 						hasSome: [currentUser?.id],
 					},
 				},
+			});
+			existingConversation.users.forEach((user) => {
+				if (user.email) {
+					pusher.trigger(
+						user.email,
+						"conversation:remove",
+						existingConversation,
+					);
+				}
 			});
 			return deletedConversation;
 		}),

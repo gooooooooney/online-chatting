@@ -87,7 +87,7 @@ export const messagesRouter = {
 						},
 					},
 				});
-				await pusher.trigger(conversationId, "messages:new", newMessage);
+				await pusher.trigger(conversationId, "message:new", newMessage);
 
 				const lastMessage =
 					updatedConversation.messages[updatedConversation.messages.length - 1];
@@ -96,7 +96,7 @@ export const messagesRouter = {
 					if (user.email) {
 						pusher.trigger(user.email, "conversation:update", {
 							id: conversationId,
-							lastMessage,
+							messages: [lastMessage],
 						});
 					}
 				});

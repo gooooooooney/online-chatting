@@ -1,5 +1,5 @@
-import { useOtherUser } from "@/app/hooks/use-other-user";
 import { Avatar } from "@/components/avatar";
+import { useOtherUser } from "@/hooks/use-other-user";
 import { authClient } from "@/lib/auth-client";
 import { PathRoute } from "@/lib/constants/route";
 import { cn } from "@/lib/utils";

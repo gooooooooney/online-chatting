@@ -1,9 +1,9 @@
 "use client";
 
-import { useConversation } from "@/app/hooks/use-conversation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useConversation } from "@/hooks/use-conversation";
 import { client } from "@/utils/client";
 import { useForm } from "@tanstack/react-form";
 import { ImageIcon, SendIcon } from "lucide-react";

@@ -1,10 +1,13 @@
 "use client";
 
-import { useConversation } from "@/app/hooks/use-conversation";
+import { useConversation } from "@/hooks/use-conversation";
+import { authClient } from "@/lib/auth-client";
+import { pusherClient } from "@/lib/pusher";
 import { cn } from "@/lib/utils";
 import type { FullConversation, User } from "@/types";
+import { find } from "lodash";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ConversationBox } from "./conversation-box";
 import GroupChatModal from "./group-chat-modal";
 
@@ -17,11 +20,66 @@ export const ConversationList = ({
 	initialItems = [],
 	users,
 }: ConversationListProps) => {
+	const session = authClient.useSession();
+
 	const [items, setItems] = useState<FullConversation[]>(initialItems);
 
 	const router = useRouter();
 
 	const { conversationId, isOpen } = useConversation();
+
+	const pusherKey = useMemo(() => {
+		return session.data?.user?.email;
+	}, [session.data?.user?.email]);
+
+	useEffect(() => {
+		if (!pusherKey) {
+			return;
+		}
+		pusherClient.subscribe(pusherKey);
+
+		const newConversationHandler = (conversation: FullConversation) => {
+			setItems((current) => {
+				if (find(current, { id: conversation.id })) {
+					return current;
+				}
+				return [conversation, ...current];
+			});
+		};
+		const updateConversationHandler = (conversation: FullConversation) => {
+			setItems((current) => {
+				return current.map((currentConversation) => {
+					if (currentConversation.id === conversation.id) {
+						return {
+							...currentConversation,
+							messages: conversation.messages,
+						};
+					}
+					return currentConversation;
+				});
+			});
+		};
+		const removeConversationHandler = (conversation: FullConversation) => {
+			setItems((current) => {
+				return current.filter(
+					(currentConversation) => currentConversation.id !== conversation.id,
+				);
+			});
+			if (conversationId === conversation.id) {
+				router.push("/conversations");
+			}
+		};
+		pusherClient.bind("conversation:new", newConversationHandler);
+		pusherClient.bind("conversation:update", updateConversationHandler);
+		pusherClient.bind("conversation:remove", removeConversationHandler);
+		return () => {
+			pusherClient.unsubscribe(pusherKey);
+			pusherClient.unbind("conversation:new", newConversationHandler);
+			pusherClient.unbind("conversation:update", updateConversationHandler);
+			pusherClient.unbind("conversation:remove", removeConversationHandler);
+		};
+	}, [pusherKey, conversationId, router]);
+
 	return (
 		<aside
 			className={cn(

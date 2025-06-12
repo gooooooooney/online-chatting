@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../index.css";
+import { ActiveStatus } from "@/components/active-status";
 import Header from "@/components/header";
 import Providers from "@/components/providers";
 
@@ -29,7 +30,10 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} min-h-svh antialiased`}
 			>
-				<Providers>{children}</Providers>
+				<Providers>
+					<ActiveStatus />
+					{children}
+				</Providers>
 			</body>
 		</html>
 	);

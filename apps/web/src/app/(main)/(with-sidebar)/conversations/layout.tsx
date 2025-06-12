@@ -10,7 +10,7 @@ export default async function ConversationsLayout({
 	const users = await serverClient.user.getUsers();
 	return (
 		<div className="h-full">
-			<ConversationList initialItems={initialItems} users={users} />
+			<ConversationList initialItems={initialItems || []} users={users} />
 			{children}
 		</div>
 	);

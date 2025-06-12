@@ -1,8 +1,9 @@
 "use client";
 
-import { useOtherUser } from "@/app/hooks/use-other-user";
 import { Avatar } from "@/components/avatar";
 import { ModeToggle } from "@/components/mode-toggle";
+import { useActiveListStore } from "@/hooks/use-active-list";
+import { useOtherUser } from "@/hooks/use-other-user";
 import type { FullConversation } from "@/types";
 import { ChevronLeft, EllipsisIcon } from "lucide-react";
 import Link from "next/link";
@@ -16,13 +17,15 @@ interface HeaderProps {
 
 export const Header = ({ conversation }: HeaderProps) => {
 	const otherUser = useOtherUser(conversation);
+	const { members } = useActiveListStore();
+	const isActive = members.indexOf(otherUser?.email ?? "") !== -1;
 
 	const statusText = useMemo(() => {
 		if (conversation.isGroup) {
 			return `${conversation.users.length} members`;
 		}
-		return "Active";
-	}, [conversation]);
+		return isActive ? "Active" : "Offline";
+	}, [conversation, isActive]);
 
 	return (
 		<>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useConversation } from "@/app/hooks/use-conversation";
 import { EmptyState } from "@/components/empty-state";
+import { useConversation } from "@/hooks/use-conversation";
 import { cn } from "@/lib/utils";
 export default function ConversationsPage() {
 	const { isOpen } = useConversation();

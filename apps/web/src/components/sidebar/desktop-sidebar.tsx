@@ -1,5 +1,5 @@
 "use client";
-import { useRoutes } from "@/app/hooks/use-routes";
+import { useRoutes } from "@/hooks/use-routes";
 import type { User } from "@/types";
 import { UserButton } from "@daveyplate/better-auth-ui";
 import { DesktopItem } from "./destop-item";

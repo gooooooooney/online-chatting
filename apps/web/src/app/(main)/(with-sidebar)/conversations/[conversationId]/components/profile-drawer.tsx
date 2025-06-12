@@ -1,6 +1,5 @@
 "use client";
 
-import { useOtherUser } from "@/app/hooks/use-other-user";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +10,8 @@ import {
 	DrawerHeader,
 	DrawerTrigger,
 } from "@/components/ui/drawer";
+import { useActiveListStore } from "@/hooks/use-active-list";
+import { useOtherUser } from "@/hooks/use-other-user";
 import type { FullConversation } from "@/types";
 import { format } from "date-fns";
 import { XIcon } from "lucide-react";
@@ -25,6 +26,8 @@ interface ProfileDrawerProps {
 
 export const ProfileDrawer = ({ data, children }: ProfileDrawerProps) => {
 	const otherUser = useOtherUser(data);
+	const { members } = useActiveListStore();
+	const isActive = members.indexOf(otherUser?.email ?? "") !== -1;
 
 	const joinedDate = useMemo(() => {
 		if (!otherUser) return null;
@@ -39,7 +42,7 @@ export const ProfileDrawer = ({ data, children }: ProfileDrawerProps) => {
 		if (data.isGroup) {
 			return `${data.users.length} members`;
 		}
-		return "Active";
+		return isActive ? "Active" : "Offline";
 	}, [data.isGroup, data.users.length]);
 
 	return (
