@@ -26,7 +26,6 @@ export const Body = ({ initialMessages = [] }: BodyProps) => {
 	};
 
 	const updateMessageHandler = (newMessage: FullMessageType) => {
-		console.log(newMessage);
 		setMessages((current) => {
 			return current.map((currentMessage) => {
 				if (currentMessage.id === newMessage.id) {

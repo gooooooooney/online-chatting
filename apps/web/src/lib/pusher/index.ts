@@ -8,6 +8,8 @@ export const pusherClient = new PusherClient(
 			endpoint: `/api/pusher/auth`,
 		},
 		cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-		wsHost: process.env.NEXT_PUBLIC_PUSHER_HOST!,
+		// wsHost: process.env.NEXT_PUBLIC_PUSHER_HOST!,
+		// disableStats: true,
+		// enabledTransports: ["ws", "wss"],
 	},
 );

@@ -11,7 +11,6 @@ export const pusherRouter = {
 			}),
 		)
 		.handler(async ({ context, input }) => {
-			console.log(input);
 			const { socket_id, channel_name } = input;
 			const user = context.session?.user;
 			const userEmail = user?.email;

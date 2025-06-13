@@ -18,7 +18,6 @@ interface MessageBoxProps {
 export const MessageBox = ({ data, isLast, isSameSender }: MessageBoxProps) => {
 	const session = authClient.useSession();
 	const currentUser = session.data?.user;
-	console.log(data);
 
 	const isOwn = useMemo(() => {
 		return currentUser?.email === data.sender.email;
