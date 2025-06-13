@@ -1,15 +1,6 @@
-import PusherClient from "pusher-js";
+import * as Ably from "ably";
 
-export const pusherClient = new PusherClient(
-	process.env.NEXT_PUBLIC_PUSHER_KEY!,
-	{
-		channelAuthorization: {
-			transport: "ajax",
-			endpoint: `/api/pusher/auth`,
-		},
-		cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-		// wsHost: process.env.NEXT_PUBLIC_PUSHER_HOST!,
-		// disableStats: true,
-		// enabledTransports: ["ws", "wss"],
-	},
-);
+export const ablyClient = new Ably.Realtime({
+	authUrl: `/api/ably/auth`,
+	autoConnect: typeof window !== "undefined",
+});

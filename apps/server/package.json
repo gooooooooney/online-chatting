@@ -21,16 +21,16 @@
 		"@orpc/client": "^1.2.0",
 		"@orpc/server": "^1.2.0",
 		"@prisma/client": "^6.7.0",
+		"ably": "^2.8.0",
 		"better-auth": "^1.2.7",
 		"dotenv": "^16.4.7",
 		"hono": "^4.7.6",
-		"pusher": "^5.2.0",
 		"zod": "^3.25.16"
 	},
 	"devDependencies": {
-		"tsc-alias": "^1.8.11",
-		"typescript": "^5.8.2",
 		"@types/bun": "^1.2.6",
-		"prisma": "^6.7.0"
+		"prisma": "^6.7.0",
+		"tsc-alias": "^1.8.11",
+		"typescript": "^5.8.2"
 	}
 }

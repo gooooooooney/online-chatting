@@ -5,7 +5,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { auth } from "./lib/auth";
 import { createContext } from "./lib/context";
-import pusher from "./lib/pusher";
+import ably from "./lib/pusher";
 import { appRouter } from "./routers/index";
 
 const app = new Hono();
@@ -39,16 +39,19 @@ app.get("/", (c) => {
 	return c.text("OK");
 });
 
-app.post("/api/pusher/auth", async (c) => {
+app.get("/api/ably/auth", async (c) => {
 	const context = await createContext({ context: c });
 	if (!context.session?.user?.email) {
 		return c.json({ error: "Unauthorized" }, 401);
 	}
-	const { socket_id, channel_name } = await c.req.json();
-	const authResponse = pusher.authorizeChannel(socket_id, channel_name, {
-		user_id: context.session?.user?.email,
+	const clientId = c.req.query("clientId");
+	const tokenRequest = await ably.auth.createTokenRequest({
+		clientId: clientId || context.session?.user?.email,
+		capability: {
+			"*": ["publish", "subscribe", "presence"],
+		},
 	});
-	return c.json(authResponse);
+	return c.json(tokenRequest);
 });
 
 export default app;

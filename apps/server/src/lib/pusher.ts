@@ -1,12 +1,8 @@
-import Pusher from "pusher";
+import * as Ably from "ably";
 
-const pusher = new Pusher({
-	appId: process.env.PUSHER_APP_ID!,
-	key: process.env.PUSHER_KEY!,
-	secret: process.env.PUSHER_SECRET!,
-	cluster: process.env.PUSHER_CLUSTER!,
-	useTLS: true,
-	// host: process.env.PUSHER_HOST!,
+const ably = new Ably.Rest({
+	key: process.env.ABLY_API_KEY!,
+	environment: process.env.ABLY_ENVIRONMENT, // optional for custom environments
 });
 
-export default pusher;
+export default ably;

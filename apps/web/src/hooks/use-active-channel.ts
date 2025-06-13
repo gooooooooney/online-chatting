@@ -1,36 +1,51 @@
-import { pusherClient } from "@/lib/pusher";
-import type { Channel, Members } from "pusher-js";
-import { useEffect, useState } from "react";
+import { ablyClient } from "@/lib/pusher";
+import type * as Ably from "ably";
+import { useEffect, useRef } from "react";
 import { useActiveListStore } from "./use-active-list";
 
 export const useActiveChannel = () => {
 	const { set, add, remove } = useActiveListStore();
-	const [activeChannel, setActiveChannel] = useState<Channel | null>(null);
+	const channelRef = useRef<Ably.RealtimeChannel | null>(null);
 
 	useEffect(() => {
-		let channel: Channel | null = activeChannel;
-		if (!channel) {
-			channel = pusherClient.subscribe("presence-messager");
-			setActiveChannel(channel);
-		}
-		channel.bind("pusher:subscription_succeeded", (members: Members) => {
-			let initialMembers: string[] = [];
-			members.each((member: any) => {
-				initialMembers.push(member.id);
-			});
-			set(initialMembers);
-		});
-		channel.bind("pusher:member_added", (member: any) => {
-			add(member.id);
-		});
-		channel.bind("pusher:member_removed", (member: any) => {
-			remove(member.id);
-		});
-		return () => {
-			if (activeChannel) {
-				pusherClient.unsubscribe("presence-messager");
-				setActiveChannel(null);
+		const channel = ablyClient.channels.get("presence-messager");
+		channelRef.current = channel;
+
+		const setupPresence = async () => {
+			try {
+				// Enter presence to indicate user is online
+				await channel.presence.enter();
+
+				// Listen for presence updates
+				channel.presence.subscribe("enter", (member: Ably.PresenceMessage) => {
+					add(member.clientId || "");
+				});
+
+				channel.presence.subscribe("leave", (member: Ably.PresenceMessage) => {
+					remove(member.clientId || "");
+				});
+
+				// Get initial presence set
+				const presenceSet = await channel.presence.get();
+				if (presenceSet) {
+					const initialMembers = presenceSet.map(
+						(member: Ably.PresenceMessage) => member.clientId || "",
+					);
+					set(initialMembers);
+				}
+			} catch (error) {
+				console.error("Error setting up presence:", error);
 			}
 		};
-	}, [activeChannel, set, add, remove]);
+
+		setupPresence();
+
+		return () => {
+			if (channelRef.current) {
+				channelRef.current.presence.leave();
+				channelRef.current.presence.unsubscribe();
+				channelRef.current = null;
+			}
+		};
+	}, [set, add, remove]);
 };

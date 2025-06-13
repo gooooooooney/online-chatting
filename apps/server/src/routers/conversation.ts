@@ -3,7 +3,7 @@ import type { FullConversation } from "types";
 import { z } from "zod";
 import prisma from "../../prisma";
 import { protectedProcedure } from "../lib/orpc";
-import pusher from "../lib/pusher";
+import ably from "../lib/pusher";
 
 export const conversationRouter = {
 	createConversation: protectedProcedure
@@ -46,9 +46,10 @@ export const conversationRouter = {
 						users: true,
 					},
 				});
-				newConversation.users.forEach((user) => {
+				newConversation.users.forEach(async (user) => {
 					if (user.email) {
-						pusher.trigger(user.email, "conversation:new", newConversation);
+						const channel = ably.channels.get(user.email);
+						await channel.publish("conversation:new", newConversation);
 					}
 				});
 				return newConversation;
@@ -85,9 +86,10 @@ export const conversationRouter = {
 					users: true,
 				},
 			});
-			newConversation.users.forEach((user) => {
+			newConversation.users.forEach(async (user) => {
 				if (user.email) {
-					pusher.trigger(user.email, "conversation:new", newConversation);
+					const channel = ably.channels.get(user.email);
+					await channel.publish("conversation:new", newConversation);
 				}
 			});
 			return newConversation;
@@ -191,7 +193,8 @@ export const conversationRouter = {
 					},
 				},
 			});
-			await pusher.trigger(currentUser?.email!, "conversation:update", {
+			const userChannel = ably.channels.get(currentUser?.email!);
+			await userChannel.publish("conversation:update", {
 				id: conversationId,
 				messages: [updatedMessage],
 			});
@@ -199,7 +202,8 @@ export const conversationRouter = {
 			if (lastMessage.senderId.indexOf(currentUser?.id!) !== -1) {
 				return conversation;
 			}
-			await pusher.trigger(conversationId, "message:update", updatedMessage);
+			const conversationChannel = ably.channels.get(conversationId);
+			await conversationChannel.publish("message:update", updatedMessage);
 
 			return updatedMessage;
 		}),
@@ -233,13 +237,10 @@ export const conversationRouter = {
 					},
 				},
 			});
-			existingConversation.users.forEach((user) => {
+			existingConversation.users.forEach(async (user) => {
 				if (user.email) {
-					pusher.trigger(
-						user.email,
-						"conversation:remove",
-						existingConversation,
-					);
+					const channel = ably.channels.get(user.email);
+					await channel.publish("conversation:remove", existingConversation);
 				}
 			});
 			return deletedConversation;

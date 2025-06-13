@@ -1,22 +1,26 @@
 import z from "zod";
 import { protectedProcedure } from "../lib/orpc";
-import pusher from "../lib/pusher";
+import ably from "../lib/pusher";
 
-export const pusherRouter = {
+export const ablyRouter = {
 	auth: protectedProcedure
 		.input(
 			z.object({
-				socket_id: z.string(),
-				channel_name: z.string(),
+				clientId: z.string().optional(),
 			}),
 		)
 		.handler(async ({ context, input }) => {
-			const { socket_id, channel_name } = input;
+			const { clientId } = input;
 			const user = context.session?.user;
 			const userEmail = user?.email;
-			const authResponse = pusher.authorizeChannel(socket_id, channel_name, {
-				user_id: userEmail,
+
+			const tokenRequest = await ably.auth.createTokenRequest({
+				clientId: clientId || userEmail,
+				capability: {
+					"*": ["publish", "subscribe", "presence"],
+				},
 			});
-			return authResponse;
+
+			return tokenRequest;
 		}),
 };

@@ -2,9 +2,10 @@
 
 import { useConversation } from "@/hooks/use-conversation";
 import { authClient } from "@/lib/auth-client";
-import { pusherClient } from "@/lib/pusher";
+import { ablyClient } from "@/lib/pusher";
 import { cn } from "@/lib/utils";
 import type { FullConversation, User } from "@/types";
+import type * as Ably from "ably";
 import { find } from "lodash";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -28,17 +29,19 @@ export const ConversationList = ({
 
 	const { conversationId, isOpen } = useConversation();
 
-	const pusherKey = useMemo(() => {
+	const channelName = useMemo(() => {
 		return session.data?.user?.email;
 	}, [session.data?.user?.email]);
 
 	useEffect(() => {
-		if (!pusherKey) {
+		if (!channelName) {
 			return;
 		}
-		pusherClient.subscribe(pusherKey);
 
-		const newConversationHandler = (conversation: FullConversation) => {
+		const channel = ablyClient.channels.get(channelName);
+
+		const newConversationHandler = (message: Ably.Message) => {
+			const conversation = message.data as FullConversation;
 			setItems((current) => {
 				if (find(current, { id: conversation.id })) {
 					return current;
@@ -46,7 +49,9 @@ export const ConversationList = ({
 				return [conversation, ...current];
 			});
 		};
-		const updateConversationHandler = (conversation: FullConversation) => {
+
+		const updateConversationHandler = (message: Ably.Message) => {
+			const conversation = message.data as FullConversation;
 			setItems((current) => {
 				return current.map((currentConversation) => {
 					if (currentConversation.id === conversation.id) {
@@ -59,7 +64,9 @@ export const ConversationList = ({
 				});
 			});
 		};
-		const removeConversationHandler = (conversation: FullConversation) => {
+
+		const removeConversationHandler = (message: Ably.Message) => {
+			const conversation = message.data as FullConversation;
 			setItems((current) => {
 				return current.filter(
 					(currentConversation) => currentConversation.id !== conversation.id,
@@ -69,16 +76,17 @@ export const ConversationList = ({
 				router.push("/conversations");
 			}
 		};
-		pusherClient.bind("conversation:new", newConversationHandler);
-		pusherClient.bind("conversation:update", updateConversationHandler);
-		pusherClient.bind("conversation:remove", removeConversationHandler);
+
+		channel.subscribe("conversation:new", newConversationHandler);
+		channel.subscribe("conversation:update", updateConversationHandler);
+		channel.subscribe("conversation:remove", removeConversationHandler);
+
 		return () => {
-			pusherClient.unsubscribe(pusherKey);
-			pusherClient.unbind("conversation:new", newConversationHandler);
-			pusherClient.unbind("conversation:update", updateConversationHandler);
-			pusherClient.unbind("conversation:remove", removeConversationHandler);
+			channel.unsubscribe("conversation:new", newConversationHandler);
+			channel.unsubscribe("conversation:update", updateConversationHandler);
+			channel.unsubscribe("conversation:remove", removeConversationHandler);
 		};
-	}, [pusherKey, conversationId, router]);
+	}, [channelName, conversationId, router]);
 
 	return (
 		<aside

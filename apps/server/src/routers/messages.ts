@@ -1,7 +1,7 @@
 import z from "zod";
 import prisma from "../../prisma";
 import { protectedProcedure } from "../lib/orpc";
-import pusher from "../lib/pusher";
+import ably from "../lib/pusher";
 
 export const messagesRouter = {
 	getMessages: protectedProcedure
@@ -87,14 +87,16 @@ export const messagesRouter = {
 						},
 					},
 				});
-				await pusher.trigger(conversationId, "message:new", newMessage);
+				const conversationChannel = ably.channels.get(conversationId);
+				await conversationChannel.publish("message:new", newMessage);
 
 				const lastMessage =
 					updatedConversation.messages[updatedConversation.messages.length - 1];
 
-				updatedConversation.users.forEach((user) => {
+				updatedConversation.users.forEach(async (user) => {
 					if (user.email) {
-						pusher.trigger(user.email, "conversation:update", {
+						const userChannel = ably.channels.get(user.email);
+						await userChannel.publish("conversation:update", {
 							id: conversationId,
 							messages: [lastMessage],
 						});

@@ -1,9 +1,10 @@
 "use client";
 
 import { useConversation } from "@/hooks/use-conversation";
-import { pusherClient } from "@/lib/pusher";
+import { ablyClient } from "@/lib/pusher";
 import type { FullMessageType } from "@/types";
 import { client } from "@/utils/client";
+import type * as Ably from "ably";
 import { find } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MessageBox } from "./message-box";
@@ -16,16 +17,18 @@ export const Body = ({ initialMessages = [] }: BodyProps) => {
 	const bottomRef = useRef<HTMLDivElement>(null);
 	const { conversationId } = useConversation();
 
-	const messagesHandler = (message: FullMessageType) => {
+	const messagesHandler = (message: Ably.Message) => {
+		const messageData = message.data as FullMessageType;
 		setMessages((current) => {
-			if (find(current, { id: message.id })) {
+			if (find(current, { id: messageData.id })) {
 				return current;
 			}
-			return [...current, message];
+			return [...current, messageData];
 		});
 	};
 
-	const updateMessageHandler = (newMessage: FullMessageType) => {
+	const updateMessageHandler = (message: Ably.Message) => {
+		const newMessage = message.data as FullMessageType;
 		setMessages((current) => {
 			return current.map((currentMessage) => {
 				if (currentMessage.id === newMessage.id) {
@@ -41,15 +44,14 @@ export const Body = ({ initialMessages = [] }: BodyProps) => {
 	}, [initialMessages]);
 
 	useEffect(() => {
-		pusherClient.subscribe(conversationId);
+		const channel = ablyClient.channels.get(conversationId);
 		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
-		pusherClient.bind("message:new", messagesHandler);
-		pusherClient.bind("message:update", updateMessageHandler);
+		channel.subscribe("message:new", messagesHandler);
+		channel.subscribe("message:update", updateMessageHandler);
 		return () => {
-			pusherClient.unsubscribe(conversationId);
-			pusherClient.unbind("message:new", messagesHandler);
-			pusherClient.unbind("message:update", updateMessageHandler);
+			channel.unsubscribe("message:new", messagesHandler);
+			channel.unsubscribe("message:update", updateMessageHandler);
 		};
 	}, [conversationId]);
 
