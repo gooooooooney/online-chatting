@@ -1,9 +1,8 @@
 import { ORPCError } from "@orpc/server";
 import { z } from "zod";
-import prisma from "../../prisma";
-import type { FullConversation } from "../../types";
 import { protectedProcedure } from "../lib/orpc";
-import ably from "../lib/pusher";
+import AppwriteRealtime from "../lib/realtime";
+import DatabaseService from "../services/database";
 
 export const conversationRouter = {
 	createConversation: protectedProcedure
@@ -24,100 +23,94 @@ export const conversationRouter = {
 		)
 		.handler(async ({ context, input }) => {
 			const currentUser = context.session?.user;
+			if (!currentUser) {
+				throw new ORPCError("UNAUTHORIZED", {
+					message: "User not authenticated",
+				});
+			}
+
 			const { userId, isGroup, name, members } = input;
+			const db = new DatabaseService(context.appwriteSession?.$id);
+
 			if (isGroup && (!members || members.length < 2 || !name)) {
 				throw new ORPCError("BAD_REQUEST", {
 					message: "Invalid group conversation data",
 				});
 			}
+
 			if (isGroup && members) {
-				const newConversation = await prisma.conversation.create({
-					data: {
-						name,
-						isGroup,
-						users: {
-							connect: [
-								...members.map((member) => ({ id: member.value })),
-								{ id: currentUser?.id },
-							],
-						},
-					},
-					include: {
-						users: true,
-					},
+				const userIds = [
+					...members.map((member) => member.value),
+					currentUser.id,
+				];
+
+				const newConversation = await db.createConversation({
+					name,
+					isGroup: true,
+					userIds,
 				});
-				newConversation.users.forEach(async (user) => {
-					if (user.email) {
-						const channel = ably.channels.get(user.email);
-						await channel.publish("conversation:new", newConversation);
-					}
-				});
+
+				// Trigger real-time updates for all participants
+				AppwriteRealtime.triggerConversationUpdate(
+					newConversation.$id,
+					newConversation,
+				);
+
 				return newConversation;
 			}
 
-			const existingConversations = await prisma.conversation.findMany({
-				where: {
-					OR: [
-						{
-							userIds: {
-								equals: [userId!, currentUser?.id],
-							},
-						},
-						{
-							userIds: {
-								equals: [currentUser?.id!, userId!],
-							},
-						},
-					],
-				},
-			});
-			const singleConversation = existingConversations[0];
-			if (singleConversation) {
-				return singleConversation;
+			if (!userId) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: "User ID is required for one-on-one conversation",
+				});
 			}
 
-			const newConversation = await prisma.conversation.create({
-				data: {
-					users: {
-						connect: [{ id: currentUser?.id }, { id: userId }],
-					},
-				},
-				include: {
-					users: true,
-				},
+			// Check for existing conversation
+			const existingConversation = await db.findExistingConversation([
+				currentUser.id,
+				userId,
+			]);
+
+			if (existingConversation) {
+				return existingConversation;
+			}
+
+			// Create new conversation
+			const newConversation = await db.createConversation({
+				isGroup: false,
+				userIds: [currentUser.id, userId],
 			});
-			newConversation.users.forEach(async (user) => {
-				if (user.email) {
-					const channel = ably.channels.get(user.email);
-					await channel.publish("conversation:new", newConversation);
-				}
-			});
+
+			// Trigger real-time updates
+			AppwriteRealtime.triggerConversationUpdate(
+				newConversation.$id,
+				newConversation,
+			);
+
 			return newConversation;
 		}),
+
 	getConversationList: protectedProcedure.handler(async ({ context }) => {
 		const currentUser = context.session?.user;
-		const conversations = await prisma.conversation.findMany({
-			where: {
-				userIds: {
-					has: currentUser?.id,
-				},
-			},
-			orderBy: {
-				lastMessageAt: "desc",
-			},
-			include: {
-				users: true,
-				messages: {
-					include: {
-						sender: true,
-						seen: true,
-					},
-				},
-			},
-		});
+		if (!currentUser) {
+			throw new ORPCError("UNAUTHORIZED", {
+				message: "User not authenticated",
+			});
+		}
 
-		return conversations;
+		const db = new DatabaseService(context.appwriteSession?.$id);
+		const conversations = await db.getUserConversations(currentUser.id);
+
+		// Get full conversation data with messages and users
+		const fullConversations = await Promise.all(
+			conversations.map(async (conv) => {
+				return await db.getFullConversation(conv.$id);
+			}),
+		);
+
+		return fullConversations.filter(Boolean);
 	}),
+
 	getConversationById: protectedProcedure
 		.input(
 			z.object({
@@ -125,26 +118,34 @@ export const conversationRouter = {
 			}),
 		)
 		.handler(async ({ context, input }) => {
-			const { conversationId } = input;
-
-			const conversation: FullConversation | null =
-				await prisma.conversation.findUnique({
-					where: {
-						id: conversationId,
-					},
-					include: {
-						users: true,
-						messages: {
-							include: {
-								sender: true,
-								seen: true,
-							},
-						},
-					},
+			const currentUser = context.session?.user;
+			if (!currentUser) {
+				throw new ORPCError("UNAUTHORIZED", {
+					message: "User not authenticated",
 				});
+			}
+
+			const { conversationId } = input;
+			const db = new DatabaseService(context.appwriteSession?.$id);
+
+			const conversation = await db.getFullConversation(conversationId);
+
+			if (!conversation) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Conversation not found",
+				});
+			}
+
+			// Check if user is participant
+			if (!conversation.userIds.includes(currentUser.id)) {
+				throw new ORPCError("FORBIDDEN", {
+					message: "Access denied",
+				});
+			}
 
 			return conversation;
 		}),
+
 	seen: protectedProcedure
 		.input(
 			z.object({
@@ -154,59 +155,48 @@ export const conversationRouter = {
 		.handler(async ({ context, input }) => {
 			const { conversationId } = input;
 			const currentUser = context.session?.user;
-			const conversation = await prisma.conversation.findUnique({
-				where: {
-					id: conversationId,
-				},
-				include: {
-					messages: {
-						include: {
-							seen: true,
-						},
-					},
-					users: true,
-				},
-			});
+			if (!currentUser) {
+				throw new ORPCError("UNAUTHORIZED", {
+					message: "User not authenticated",
+				});
+			}
+
+			const db = new DatabaseService(context.appwriteSession?.$id);
+			const conversation = await db.getFullConversation(conversationId);
+
 			if (!conversation) {
 				throw new ORPCError("NOT_FOUND", {
 					message: "Conversation not found",
 				});
 			}
+
+			// Check if user is participant
+			if (!conversation.userIds.includes(currentUser.id)) {
+				throw new ORPCError("FORBIDDEN", {
+					message: "Access denied",
+				});
+			}
+
 			const lastMessage =
 				conversation.messages[conversation.messages.length - 1];
 			if (!lastMessage) {
 				return conversation;
 			}
-			const updatedMessage = await prisma.message.update({
-				where: {
-					id: lastMessage.id,
-				},
-				include: {
-					seen: true,
-					sender: true,
-				},
-				data: {
-					seen: {
-						connect: {
-							id: currentUser?.id,
-						},
-					},
-				},
-			});
-			const userChannel = ably.channels.get(currentUser?.email!);
-			await userChannel.publish("conversation:update", {
-				id: conversationId,
-				messages: [updatedMessage],
-			});
 
-			if (lastMessage.senderId.indexOf(currentUser?.id!) !== -1) {
-				return conversation;
+			// Mark message as seen
+			const updatedMessage = await db.markMessageAsSeen(
+				lastMessage.$id,
+				currentUser.id,
+			);
+
+			// Don't trigger events if the user is the sender
+			if (lastMessage.senderId !== currentUser.id) {
+				AppwriteRealtime.triggerMessageUpdate(updatedMessage);
 			}
-			const conversationChannel = ably.channels.get(conversationId);
-			await conversationChannel.publish("message:update", updatedMessage);
 
 			return updatedMessage;
 		}),
+
 	deleteConversation: protectedProcedure
 		.input(
 			z.object({
@@ -216,33 +206,35 @@ export const conversationRouter = {
 		.handler(async ({ context, input }) => {
 			const { conversationId } = input;
 			const currentUser = context.session?.user;
-			const existingConversation = await prisma.conversation.findUnique({
-				where: {
-					id: conversationId,
-				},
-				include: {
-					users: true,
-				},
-			});
+			if (!currentUser) {
+				throw new ORPCError("UNAUTHORIZED", {
+					message: "User not authenticated",
+				});
+			}
+
+			const db = new DatabaseService(context.appwriteSession?.$id);
+			const existingConversation = await db.getConversationById(conversationId);
+
 			if (!existingConversation) {
 				throw new ORPCError("NOT_FOUND", {
 					message: "Conversation not found",
 				});
 			}
-			const deletedConversation = await prisma.conversation.delete({
-				where: {
-					id: conversationId,
-					userIds: {
-						hasSome: [currentUser?.id],
-					},
-				},
+
+			// Check if user is participant
+			if (!existingConversation.userIds.includes(currentUser.id)) {
+				throw new ORPCError("FORBIDDEN", {
+					message: "Access denied",
+				});
+			}
+
+			const deletedConversation = await db.deleteConversation(conversationId);
+
+			// Trigger real-time updates for all participants
+			AppwriteRealtime.triggerConversationUpdate(conversationId, {
+				deleted: true,
 			});
-			existingConversation.users.forEach(async (user) => {
-				if (user.email) {
-					const channel = ably.channels.get(user.email);
-					await channel.publish("conversation:remove", existingConversation);
-				}
-			});
+
 			return deletedConversation;
 		}),
 };

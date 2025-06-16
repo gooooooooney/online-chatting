@@ -1,6 +1,7 @@
-import * as Ably from "ably";
+import { AppwriteRealtime, client } from "../appwrite";
 
-export const ablyClient = new Ably.Realtime({
-	authUrl: `/api/ably/auth`,
-	autoConnect: typeof window !== "undefined",
-});
+// Export the Appwrite client as the real-time client
+export const realtimeClient = client;
+
+// Export realtime helpers
+export { AppwriteRealtime as realtimeService } from "../appwrite";

@@ -1,7 +1,21 @@
-import { customSessionClient } from "better-auth/client/plugins";
-import { createAuthClient } from "better-auth/react";
-import type { auth } from "../../../server/src/lib/auth";
-export const authClient = createAuthClient({
-	baseURL: process.env.NEXT_PUBLIC_SERVER_URL,
-	plugins: [customSessionClient<typeof auth>()],
-});
+import { AppwriteAuth, account } from "./appwrite";
+
+// Export Appwrite auth as the auth client
+export const authClient = {
+	// User management
+	getCurrentUser: AppwriteAuth.getCurrentUser,
+	getCurrentSession: AppwriteAuth.getCurrentSession,
+
+	// Authentication
+	signIn: AppwriteAuth.login,
+	signUp: AppwriteAuth.register,
+	signOut: AppwriteAuth.logout,
+
+	// OAuth
+	signInWithOAuth: AppwriteAuth.createOAuth2Session,
+
+	// Account service for advanced operations
+	account,
+};
+
+export { AppwriteAuth };

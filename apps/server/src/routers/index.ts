@@ -1,7 +1,6 @@
 import { protectedProcedure, publicProcedure } from "../lib/orpc";
 import { conversationRouter } from "./conversation";
 import { messagesRouter } from "./messages";
-import { ablyRouter } from "./puser";
 import { userRouter } from "./user";
 
 export const appRouter = {
@@ -14,9 +13,12 @@ export const appRouter = {
 			user: context.session?.user,
 		};
 	}),
+	getCurrentUser: publicProcedure.handler(async ({ context }) => {
+		return context.session?.user || null;
+	}),
 	user: userRouter,
 	conversation: conversationRouter,
 	messages: messagesRouter,
-	ably: ablyRouter,
 };
+
 export type AppRouter = typeof appRouter;

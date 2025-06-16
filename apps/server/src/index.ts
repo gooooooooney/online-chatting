@@ -3,9 +3,8 @@ import { RPCHandler } from "@orpc/server/fetch";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { auth } from "./lib/auth";
+import { authHandler } from "./lib/auth";
 import { createContext } from "./lib/context";
-import ably from "./lib/pusher";
 import { appRouter } from "./routers/index";
 
 const app = new Hono();
@@ -16,12 +15,15 @@ app.use(
 	cors({
 		origin: process.env.CORS_ORIGIN || "",
 		allowMethods: ["GET", "POST", "OPTIONS"],
-		allowHeaders: ["Content-Type", "Authorization"],
+		allowHeaders: ["Content-Type", "Authorization", "X-Appwrite-Session"],
 		credentials: true,
 	}),
 );
-app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
 
+// Handle Appwrite Auth routes
+app.on(["POST", "GET"], "/api/auth/**", (c) => authHandler.handler(c.req.raw));
+
+// Handle RPC routes
 const handler = new RPCHandler(appRouter);
 app.use("/rpc/*", async (c, next) => {
 	const context = await createContext({ context: c });
@@ -36,22 +38,16 @@ app.use("/rpc/*", async (c, next) => {
 });
 
 app.get("/", (c) => {
-	return c.text("OK");
+	return c.text("Oral Chat API - Powered by Appwrite");
 });
 
-app.get("/api/ably/auth", async (c) => {
-	const context = await createContext({ context: c });
-	if (!context.session?.user?.email) {
-		return c.json({ error: "Unauthorized" }, 401);
-	}
-	const clientId = c.req.query("clientId");
-	const tokenRequest = await ably.auth.createTokenRequest({
-		clientId: clientId || context.session?.user?.email,
-		capability: {
-			"*": ["publish", "subscribe", "presence"],
-		},
+// Health check endpoint
+app.get("/health", (c) => {
+	return c.json({
+		status: "healthy",
+		timestamp: new Date().toISOString(),
+		service: "oral-chat-api",
 	});
-	return c.json(tokenRequest);
 });
 
 export default app;

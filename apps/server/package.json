@@ -8,31 +8,22 @@
 		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
 		"dev": "bun run --hot src/index.ts",
 		"start": "bun run dist/src/index.js",
-		"db:push": "prisma db push --schema ./prisma/schema",
-		"db:studio": "prisma studio",
-		"db:generate": "prisma generate --schema ./prisma/schema",
-		"db:migrate": "prisma migrate dev",
+		"setup-appwrite": "bun run scripts/setup-appwrite.ts",
 		"dev:wrangler": "wrangler dev --port 3000",
 		"deploy": "wrangler deploy --minify",
 		"cf-typegen": "wrangler types --env-interface CloudflareBindings"
 	},
-	"prisma": {
-		"schema": "./schema"
-	},
 	"dependencies": {
-		"@better-auth/expo": "^1.2.7",
 		"@orpc/client": "^1.2.0",
 		"@orpc/server": "^1.2.0",
-		"@prisma/client": "^6.7.0",
-		"ably": "^2.8.0",
-		"better-auth": "^1.2.7",
+		"node-appwrite": "^14.0.0",
+		"appwrite": "^16.0.2",
 		"dotenv": "^16.4.7",
 		"hono": "^4.7.6",
 		"zod": "^3.25.16"
 	},
 	"devDependencies": {
 		"@types/bun": "^1.2.6",
-		"prisma": "^6.7.0",
 		"tsc-alias": "^1.8.11",
 		"typescript": "^5.8.2",
 		"wrangler": "^4.19.2"

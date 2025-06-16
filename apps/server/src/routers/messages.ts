@@ -1,7 +1,8 @@
+import { ORPCError } from "@orpc/server";
 import z from "zod";
-import prisma from "../../prisma";
 import { protectedProcedure } from "../lib/orpc";
-import ably from "../lib/pusher";
+import AppwriteRealtime from "../lib/realtime";
+import DatabaseService from "../services/database";
 
 export const messagesRouter = {
 	getMessages: protectedProcedure
@@ -11,23 +12,63 @@ export const messagesRouter = {
 			}),
 		)
 		.handler(async ({ context, input }) => {
+			const currentUser = context.session?.user;
+			if (!currentUser) {
+				throw new ORPCError("UNAUTHORIZED", {
+					message: "User not authenticated",
+				});
+			}
+
 			const { conversationId } = input;
+			const db = new DatabaseService(context.appwriteSession?.$id);
 
-			const messages = await prisma.message.findMany({
-				where: {
-					conversationId,
-				},
-				include: {
-					sender: true,
-					seen: true,
-				},
-				orderBy: {
-					createdAt: "asc",
-				},
-			});
+			// First, verify user has access to this conversation
+			const conversation = await db.getConversationById(conversationId);
+			if (!conversation) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Conversation not found",
+				});
+			}
 
-			return messages;
+			if (!conversation.userIds.includes(currentUser.id)) {
+				throw new ORPCError("FORBIDDEN", {
+					message: "Access denied",
+				});
+			}
+
+			const messages = await db.getConversationMessages(conversationId);
+
+			// Get sender information for each message
+			const messagesWithSenders = await Promise.all(
+				messages.map(async (message) => {
+					const sender = await db.getUserById(message.senderId);
+					const seenUsers = await Promise.all(
+						message.seenIds.map((userId) => db.getUserById(userId)),
+					);
+
+					return {
+						...message,
+						sender: sender
+							? {
+									$id: sender.$id,
+									name: sender.name,
+									email: sender.email,
+									image: sender.image,
+								}
+							: null,
+						seen: seenUsers.filter(Boolean).map((user) => ({
+							$id: user!.$id,
+							name: user!.name,
+							email: user!.email,
+							image: user!.image,
+						})),
+					};
+				}),
+			);
+
+			return messagesWithSenders;
 		}),
+
 	message: protectedProcedure
 		.input(
 			z.object({
@@ -37,74 +78,90 @@ export const messagesRouter = {
 			}),
 		)
 		.handler(async ({ context, input }) => {
-			const { user } = context.session;
+			const currentUser = context.session?.user;
+			if (!currentUser) {
+				throw new ORPCError("UNAUTHORIZED", {
+					message: "User not authenticated",
+				});
+			}
+
 			const { conversationId, message, image } = input;
 
-			try {
-				const newMessage = await prisma.message.create({
-					data: {
-						body: message,
-						image,
-						conversation: {
-							connect: {
-								id: conversationId,
-							},
-						},
-						sender: {
-							connect: {
-								id: user.id,
-							},
-						},
-						seen: {
-							connect: {
-								id: user.id,
-							},
-						},
-					},
-					include: {
-						sender: true,
-					},
+			if (!message && !image) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: "Message body or image is required",
 				});
-				const updatedConversation = await prisma.conversation.update({
-					where: {
-						id: conversationId,
-					},
-					data: {
-						lastMessageAt: new Date(),
-						messages: {
-							connect: {
-								id: newMessage.id,
-							},
-						},
-					},
-					include: {
-						users: true,
-						messages: {
-							include: {
-								sender: true,
-								seen: true,
-							},
-						},
-					},
-				});
-				const conversationChannel = ably.channels.get(conversationId);
-				await conversationChannel.publish("message:new", newMessage);
+			}
 
+			const db = new DatabaseService(context.appwriteSession?.$id);
+
+			// Verify user has access to this conversation
+			const conversation = await db.getConversationById(conversationId);
+			if (!conversation) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Conversation not found",
+				});
+			}
+
+			if (!conversation.userIds.includes(currentUser.id)) {
+				throw new ORPCError("FORBIDDEN", {
+					message: "Access denied",
+				});
+			}
+
+			try {
+				// Create the message
+				const newMessage = await db.createMessage({
+					body: message,
+					image,
+					conversationId,
+					senderId: currentUser.id,
+				});
+
+				// Get the updated conversation with the new message
+				const updatedConversation =
+					await db.getFullConversation(conversationId);
+
+				if (!updatedConversation) {
+					throw new ORPCError("INTERNAL_SERVER_ERROR", {
+						message: "Failed to retrieve updated conversation",
+					});
+				}
+
+				// Get sender information for the new message
+				const sender = await db.getUserById(currentUser.id);
+				const messageWithSender = {
+					...newMessage,
+					sender: sender
+						? {
+								$id: sender.$id,
+								name: sender.name,
+								email: sender.email,
+								image: sender.image,
+							}
+						: null,
+				};
+
+				// Trigger real-time events
+				AppwriteRealtime.triggerMessageNew(messageWithSender);
+
+				// Get the last message for conversation update
 				const lastMessage =
 					updatedConversation.messages[updatedConversation.messages.length - 1];
+				if (lastMessage) {
+					// Trigger conversation update with last message
+					AppwriteRealtime.triggerConversationUpdate(conversationId, {
+						id: conversationId,
+						lastMessage: lastMessage,
+					});
+				}
 
-				updatedConversation.users.forEach(async (user) => {
-					if (user.email) {
-						const userChannel = ably.channels.get(user.email);
-						await userChannel.publish("conversation:update", {
-							id: conversationId,
-							messages: [lastMessage],
-						});
-					}
-				});
-				return newMessage;
+				return messageWithSender;
 			} catch (error) {
-				console.error(error);
+				console.error("Error creating message:", error);
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to create message",
+				});
 			}
 		}),
 };

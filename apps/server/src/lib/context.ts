@@ -1,16 +1,30 @@
 import type { Context as HonoContext } from "hono";
-import { auth } from "./auth";
+import { AppwriteAuth } from "./auth";
 
 export type CreateContextOptions = {
 	context: HonoContext;
 };
 
 export async function createContext({ context }: CreateContextOptions) {
-	const session = await auth.api.getSession({
-		headers: context.req.raw.headers,
-	});
+	// Get session from headers
+	const result = await AppwriteAuth.verifySession(context.req.raw.headers);
+
 	return {
-		session,
+		session: result
+			? {
+					user: {
+						id: result.user.$id,
+						email: result.user.email,
+						name: result.user.name,
+						image: result.user.prefs?.image || null,
+						emailVerified: result.user.emailVerification,
+					},
+					sessionId: result.session.$id,
+				}
+			: null,
+		// Include raw Appwrite user and session for advanced operations
+		appwriteUser: result?.user || null,
+		appwriteSession: result?.session || null,
 	};
 }
 
