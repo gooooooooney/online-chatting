@@ -2,7 +2,6 @@ import { protectedProcedure, publicProcedure } from "../lib/orpc";
 import { conversationRouter } from "./conversation";
 import { messagesRouter } from "./messages";
 import { ablyRouter } from "./puser";
-import { todoRouter } from "./todo";
 import { userRouter } from "./user";
 
 export const appRouter = {
@@ -15,7 +14,6 @@ export const appRouter = {
 			user: context.session?.user,
 		};
 	}),
-	todo: todoRouter,
 	user: userRouter,
 	conversation: conversationRouter,
 	messages: messagesRouter,
