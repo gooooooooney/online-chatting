@@ -10,6 +10,7 @@
 		"prepare": "husky",
 		"dev": "turbo dev",
 		"build": "turbo build",
+		"start:ws": "turbo start --filter=server --filter=web",
 		"build:ws": "turbo build --filter=server --filter=web",
 		"build:server": "turbo build --filter=server",
 		"build:web": "turbo build --filter=web",
