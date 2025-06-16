@@ -1,0 +1,36 @@
+version: "3"
+
+services:
+  web:
+    container_name: web
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+    restart: always
+    ports:
+      - 3000:3000
+    networks:
+      - app_network
+    env_file:
+      - apps/web/.env
+    depends_on:
+      - api
+
+  api:
+    container_name: api
+    build:
+      context: .
+      dockerfile: ./apps/server/Dockerfile
+    restart: always
+    ports:
+      - 3001:3001
+    networks:
+      - app_network
+    env_file:
+      - apps/server/.env
+    # 如果需要数据库，可以添加 depends_on
+
+# 定义内部网络，允许容器之间通过容器名作为主机名进行通信
+networks:
+  app_network:
+    driver: bridge
