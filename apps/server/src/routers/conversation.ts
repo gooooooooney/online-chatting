@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server";
-import type { FullConversation } from "types";
 import { z } from "zod";
 import prisma from "../../prisma";
+import type { FullConversation } from "../../types";
 import { protectedProcedure } from "../lib/orpc";
 import ably from "../lib/pusher";
 
